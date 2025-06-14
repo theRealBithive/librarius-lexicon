@@ -6,7 +6,7 @@ This **Django-based application**, packaged as a **Docker container**, simplifie
 
 ## ✨ What It Does
 
-The Audiobook Organizer streamlines your workflow:
+Librarius Lexicon streamlines your workflow:
 
 1.  **Input & Detection**: You drop your audiobook files into a specified **input folder**. While manual uploads are possible, the primary design encourages using the input folder, perhaps in conjunction with a torrent client or similar download tool.
 2.  **Metadata Collection**: The tool intelligently **collects metadata based on the filename**.
@@ -46,9 +46,9 @@ Getting this tool up and running is straightforward. You'll just need Docker and
 
     ```yaml
     services:
-      audiobook-organizer:
+      librarius-lexicon:
         build: .
-        container_name: audiobook-organizer
+        container_name: librarius-lexicon
         ports:
           - "8000:8000" # Map host port 8000 to container port 8000
         volumes:
