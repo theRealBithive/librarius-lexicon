@@ -3,7 +3,7 @@ from django.views.generic import ListView, UpdateView
 from django.urls import reverse_lazy
 from django.contrib import messages
 from .models import Audiobook
-
+from .forms import AudiobookForm
 
 class AudiobookListView(ListView):
     model = Audiobook
@@ -27,8 +27,8 @@ class AudiobookListView(ListView):
 class AudiobookUpdateView(UpdateView):
     model = Audiobook
     template_name = 'core/audiobook_edit.html'
-    fields = ['title', 'author', 'series', 'narrator']
     success_url = reverse_lazy('core:audiobook-list')
+    form_class = AudiobookForm
 
     def form_valid(self, form):
         messages.success(self.request, 'Audiobook metadata updated successfully.')
