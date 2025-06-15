@@ -99,6 +99,66 @@ This is an open-source project, and contributions are highly welcome\! If you ha
 
 -----
 
+
+## Docker Setup
+
+### Production Deployment
+
+To build and run the production Docker image:
+
+```bash
+# Build the production image
+docker build -t librarius-lexicon:prod .
+
+# Run the container
+docker run -p 8000:8000 librarius-lexicon:prod
+```
+
+### Development Environment
+
+For local development, we use Docker Compose to manage the development environment:
+
+```bash
+# Start the development environment
+docker-compose up
+
+# Run tests
+docker-compose run test
+
+# Stop the development environment
+docker-compose down
+```
+
+The development environment includes:
+- Hot-reloading enabled Django development server
+- All development dependencies installed
+- Volume mounting for instant code changes
+- Separate test environment for running tests
+
+### Testing
+
+Tests can be run in two ways:
+
+1. Using Docker Compose (recommended):
+```bash
+docker-compose run test
+```
+
+2. Directly in the development container:
+```bash
+docker-compose exec web pytest
+```
+
+### Environment Variables
+
+The following environment variables can be configured:
+
+- `DJANGO_SETTINGS_MODULE`: Django settings module to use
+- `DEBUG`: Enable/disable debug mode (1/0)
+- `PYTHONUNBUFFERED`: Ensure Python output is sent straight to terminal
+- `PYTHONDONTWRITEBYTECODE`: Prevent Python from writing .pyc files
+
+
 ## 📄 License
 
 This project is licensed under the MIT License. See the `LICENSE` file in the repository for more details.
