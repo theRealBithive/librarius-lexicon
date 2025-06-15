@@ -1,0 +1,49 @@
+[project]
+name = "librarius-lexicon"
+version = "0.1.0"
+description = "A tool that helps to process your Audiobooklibrary with Audiobookshelf"
+authors = [
+    { name = "bithive", email = "bithive@bithive.space" }
+]
+dependencies = [
+    "django>=5.0.0",
+    "gunicorn>=21.2.0",
+]
+requires-python = ">=3.12"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-django>=4.7.0",
+    "pytest-cov>=4.1.0",
+    "black>=24.1.0",
+    "ruff>=0.2.0",
+    "mypy>=1.8.0",
+    "django-stubs>=1.16.0",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "B",  # flake8-bugbear
+]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings.local"
+python_files = ["test_*.py"]
+addopts = "-v --cov=src"
