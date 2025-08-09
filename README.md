@@ -35,7 +35,7 @@ Getting this tool up and running is straightforward. You'll just need Docker and
     First, get a copy of the project files to your local machine:
 
     ```bash
-    git clone https://github.com/your-username/audiobook-organizer.git
+    git clone https://github.com/theRealBithive/librarius-lexicon
     cd audiobook-organizer
     ```
 
