@@ -19,6 +19,7 @@ class AudiobookListView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context['audiobooks_count'] = Audiobook.objects.count()
         context['pending_count'] = Audiobook.objects.filter(status='pending').count()
         context['processed_count'] = Audiobook.objects.filter(status='processed').count()
         return context
