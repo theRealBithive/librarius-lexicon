@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}Audiobooks - Librarius Lexicon{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1>Audiobooks</h1>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col">
+        <div class="btn-group" role="group">
+            <a href="{% url 'core:audiobook-list' %}" class="btn btn-outline-primary {% if not request.GET.status %}active{% endif %}">
+                All ({{ audiobooks.count }})
+            </a>
+            <a href="{% url 'core:audiobook-list' %}?status=pending" class="btn btn-outline-warning {% if request.GET.status == 'pending' %}active{% endif %}">
+                Pending ({{ pending_count }})
+            </a>
+            <a href="{% url 'core:audiobook-list' %}?status=processed" class="btn btn-outline-success {% if request.GET.status == 'processed' %}active{% endif %}">
+                Processed ({{ processed_count }})
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Author</th>
+                        <th>Series</th>
+                        <th>Narrator</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for audiobook in audiobooks %}
+                    <tr>
+                        <td>{{ audiobook.title }}</td>
+                        <td>{{ audiobook.author }}</td>
+                        <td>{{ audiobook.series|default:"-" }}</td>
+                        <td>{{ audiobook.narrator }}</td>
+                        <td>
+                            <span class="badge {% if audiobook.status == 'pending' %}bg-warning{% else %}bg-success{% endif %}">
+                                {{ audiobook.get_status_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="{% url 'core:audiobook-edit' audiobook.pk %}" class="btn btn-sm btn-primary">Edit</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center">No audiobooks found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %} 
