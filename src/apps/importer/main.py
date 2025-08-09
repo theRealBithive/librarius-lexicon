@@ -1,8 +1,8 @@
 import os
 from loguru import logger
-from src.apps.core.models import Audiobook
+from src.apps.importer.detect import find_audiobooks
 
-logger.add("logs/importer.log", rotation="100 MB", retention="10 days", enqueue=True)
+logger.add("importer.log", rotation="100 MB", retention="10 days", enqueue=True)
 
 def import_audiobooks():
     """
