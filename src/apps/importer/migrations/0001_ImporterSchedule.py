@@ -10,7 +10,7 @@ def create_import_schedule(apps, schema_editor):
         Schedule.objects.create(
             name="Importer: import_audiobooks",
             func=func_path,
-            schedule_type="M",
+            schedule_type="I",
             minutes=15,
             next_run=timezone.now(),
             repeats=-1,
