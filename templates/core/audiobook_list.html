@@ -13,7 +13,7 @@
     <div class="col">
         <div class="btn-group" role="group">
             <a href="{% url 'core:audiobook-list' %}" class="btn btn-outline-primary {% if not request.GET.status %}active{% endif %}">
-                All ({{ audiobooks.count }})
+                All ({{ audiobooks_count }})
             </a>
             <a href="{% url 'core:audiobook-list' %}?status=pending" class="btn btn-outline-warning {% if request.GET.status == 'pending' %}active{% endif %}">
                 Pending ({{ pending_count }})
