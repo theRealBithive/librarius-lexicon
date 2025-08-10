@@ -9,6 +9,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional
 from loguru import logger
+from src.apps.importer.dataclasses import AudiobookCandidate
+
+logger.add("importer.log", rotation="100 MB", retention="10 days", enqueue=True)
 
 AUDIO_EXTS = {".m4b", ".mp3", ".m4a", ".flac", ".ogg", ".opus", ".aac", ".wav"}
 COVER_EXTS = {".jpg", ".jpeg", ".png", ".webp"}
@@ -21,17 +24,7 @@ MIN_STABLE_AGE_SECONDS = 120
 DISC_PATTERN = re.compile(r"(cd|disc|part|pt|vol|volume|book)\s*\d+", re.I)
 SAMPLE_PATTERN = re.compile(r"(sample|preview|excerpt)", re.I)
 
-@dataclass
-class AudiobookCandidate:
-    path: Path
-    track_count: int
-    total_audio_bytes: int
-    has_cover: bool
-    unit_type: str  # "single_file" | "directory_tracks" | "multi_disc"
-    author_guess: Optional[str]
-    title_guess: Optional[str]
-    confidence: float
-    reason: str
+
 
 def is_temp(p: Path) -> bool:
     return p.suffix.lower() in TEMP_EXTS
@@ -156,17 +149,21 @@ def guess_author_title(path: Path) -> tuple[Optional[str], Optional[str]]:
         if f.is_file() and is_audio(f) and not is_temp(f) and not is_sample(f.name):
             logger.info(f"Found audio file: {f}")
             ffprobe_output = subprocess.check_output(["ffprobe", "-v", "error","-hide_banner", "-print_format", "json", "-show_format", f])
-            logger.info(f"FFProbe output: {ffprobe_output}")
+            logger.debug(f"FFProbe output: {ffprobe_output}")
             break
     else:
         logger.info("No audio file found")
-        return (None, None)
-    ffprobe_output = ffprobe_output.decode("utf-8")
-    ffprobe_output = json.loads(ffprobe_output)
-    author = ffprobe_output.get("tags", {}).get("author")
-    title = ffprobe_output.get("tags", {}).get("title")
-    if author or title:
-        return sanitize_meta(author), sanitize_meta(title)
+    try:
+        ffprobe_output = ffprobe_output.decode("utf-8")
+        ffprobe_output = json.loads(ffprobe_output)
+        author = ffprobe_output.get("format", {}).get("tags", {}).get("artist")
+        logger.info(f"Author: {author}")
+        title = ffprobe_output.get("format", {}).get("tags", {}).get("album")
+        logger.info(f"Title: {title}")
+        if author or title:
+            return sanitize_meta(author), sanitize_meta(title)
+    except Exception as e:
+        logger.error(f"Error parsing FFProbe output: {e}")
 
     # If ffprobe fails, use the heuristic
     # Use last two meaningful parts as author/title if parent has no audio and siblings look like other books
