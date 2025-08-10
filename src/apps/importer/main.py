@@ -24,5 +24,12 @@ class Importer:
         logger.info(f"Found {len(candidates)} candidates")
         for candidate in candidates:
             logger.info(f"Processing {candidate.path}")
-
+            logger.info(f"Author: {candidate.author_guess}")
+            logger.info(f"Title: {candidate.title_guess}")
+            logger.info(f"Confidence: {candidate.confidence}")
+            logger.info(f"Reason: {candidate.reason}")
+            logger.info(f"Unit Type: {candidate.unit_type}")
+            logger.info(f"Has Cover: {candidate.has_cover}")
+            logger.info(f"Track Count: {candidate.track_count}")
+            logger.info(f"Total Audio Bytes: {candidate.total_audio_bytes}")
 

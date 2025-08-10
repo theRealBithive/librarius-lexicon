@@ -1,11 +1,14 @@
 # place in src/apps/importer/main.py or a new module like src/apps/importer/detect.py
 
 import os
+import subprocess
+import json
 import re
 import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional
+from loguru import logger
 
 AUDIO_EXTS = {".m4b", ".mp3", ".m4a", ".flac", ".ogg", ".opus", ".aac", ".wav"}
 COVER_EXTS = {".jpg", ".jpeg", ".png", ".webp"}
@@ -46,6 +49,9 @@ def is_sample(name: str) -> bool:
     return bool(SAMPLE_PATTERN.search(name))
 
 def newest_mtime_recursive(path: Path) -> float:
+    """
+    Find the newest file in the directory and all its subdirectories.
+    """
     newest = 0.0
     for root, dirs, files in os.walk(path):
         for f in files:
@@ -59,6 +65,10 @@ def newest_mtime_recursive(path: Path) -> float:
     return newest
 
 def collapse_single_child_chain(path: Path) -> Path:
+    """
+    Collapse a single child chain of directories into a single directory.
+    How: If a directory has only one subdirectory, and that subdirectory has only one subdirectory, and that subdirectory has only one subdirectory, and so on, return the last subdirectory.
+    """
     p = path
     while True:
         try:
@@ -75,10 +85,14 @@ def collapse_single_child_chain(path: Path) -> Path:
     return p
 
 def analyze_directory(dir_path: Path) -> Optional[AudiobookCandidate]:
+    """
+    Analyze a directory for an audiobook.
+    """
+    # sanity check
     if not dir_path.exists() or not dir_path.is_dir():
         return None
 
-    # stability check
+    # stability check: if the directory is too new, it might be in-progress of copying or downloading
     newest = newest_mtime_recursive(dir_path)
     if newest and (time.time() - newest) < MIN_STABLE_AGE_SECONDS:
         return None  # in-progress
@@ -126,9 +140,38 @@ def analyze_directory(dir_path: Path) -> Optional[AudiobookCandidate]:
     return None
 
 def guess_author_title(path: Path) -> tuple[Optional[str], Optional[str]]:
-    # Heuristic: root/.../Author/Title[/disc] or root/.../Title
-    parts = [p.name for p in path.parts]
+    """
+    Guess the author and title of an audiobook from a path.
+    First, it tries the first file with ffprobe to get the author and title.
+    If that fails, it falls back to the heuristic.
+    Heuristic: /app/input/Author/Title[/disc] or /app/input/Title
+    """
+    parts = [p for p in path.parts]
+
+    # Try to get the author and title from the first file with ffprobe
+    # We need to get the first file in the path, so we need to walk the path
+    logger.info(f"Trying to get author and title from {path}")
+    for f in path.iterdir():
+        logger.info(f"Checking {f}")
+        if f.is_file() and is_audio(f) and not is_temp(f) and not is_sample(f.name):
+            logger.info(f"Found audio file: {f}")
+            ffprobe_output = subprocess.check_output(["ffprobe", "-v", "error","-hide_banner", "-print_format", "json", "-show_format", f])
+            logger.info(f"FFProbe output: {ffprobe_output}")
+            break
+    else:
+        logger.info("No audio file found")
+        return (None, None)
+    ffprobe_output = ffprobe_output.decode("utf-8")
+    ffprobe_output = json.loads(ffprobe_output)
+    author = ffprobe_output.get("tags", {}).get("author")
+    title = ffprobe_output.get("tags", {}).get("title")
+    if author or title:
+        return sanitize_meta(author), sanitize_meta(title)
+
+    # If ffprobe fails, use the heuristic
     # Use last two meaningful parts as author/title if parent has no audio and siblings look like other books
+    # Throw out the /app/input/ prefix
+    parts = parts[2:]
     if len(parts) >= 2:
         author = parts[-2]
         title = parts[-1]
@@ -137,7 +180,8 @@ def guess_author_title(path: Path) -> tuple[Optional[str], Optional[str]]:
             title = parts[-2]
             author = parts[-3] if len(parts) >= 3 else None
         return sanitize_meta(author), sanitize_meta(title)
-    return (None, None)
+    # Finally, use the last part as the title if everything else fails
+    return (None, sanitize_meta(parts[-1]))
 
 def sanitize_meta(s: Optional[str]) -> Optional[str]:
     if not s:
@@ -167,7 +211,7 @@ def find_audiobooks(root: str | Path) -> List[AudiobookCandidate]:
                             has_cover=False,
                             unit_type="single_file",
                             author_guess=author,
-                            title_guess=sanitize_meta(f.stem),
+                            title_guess=title,
                             confidence=0.75,
                             reason="Single large audio file at root",
                         )
